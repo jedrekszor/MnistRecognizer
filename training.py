@@ -23,6 +23,7 @@ validation_loader = torch.utils.data.DataLoader(validation_data, batch_size=BATC
 
 # model = torch.hub.load('pytorch/vision:v0.6.0', 'squeezenet1_0', pretrained=True)
 
+# device = 'cuda'
 device = None
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
@@ -54,7 +55,7 @@ def validate(model, data):
     total = 0
     correct = 0
     for i, (images, labels) in enumerate(data):
-        # images = images.cuda()
+        images = images.cuda()
         x = model(images)
         value, pred = torch.max(x, 1)
         pred = pred.data.cpu()
@@ -92,3 +93,4 @@ def train(epochs, device, learning_rate=1e-3):
 
 
 lenet = train(EPOCHS, device)
+print("Training finished")
