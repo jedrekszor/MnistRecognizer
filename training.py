@@ -5,7 +5,7 @@ from torch import optim
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from config import BATCH_SIZE, EPOCHS, MODELPATH
-from resources import create_model, T, validate
+from resources import create_model, T, validate, cel
 
 train_data = torchvision.datasets.MNIST('mnist_data', train=True, download=True, transform=T)
 validation_data = torchvision.datasets.MNIST('mnist_data', train=False, download=True, transform=T)
@@ -18,14 +18,6 @@ if torch.cuda.is_available():
     device = torch.device("cuda:0")
 print("Device used: ", device)
 
-def cel(model, data, ce):  # cross-entropy
-    results = []
-    for i, (images, labels) in enumerate(data):
-        images = images.cuda()
-        labels = labels.cuda()
-        pred = model(images)
-        results.append(ce(pred, labels))
-    return sum(results) / len(results)
 
 def train(epochs, device, learning_rate=1e-3):
     best_model = None

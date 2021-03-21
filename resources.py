@@ -49,4 +49,11 @@ def mse(model, data):  # mean squared error
         results.append(torch.sum(pred - labels) ** 2)
     return sum(results) / len(results)
 
-
+def cel(model, data, ce):  # cross-entropy
+    results = []
+    for i, (images, labels) in enumerate(data):
+        images = images.cuda()
+        labels = labels.cuda()
+        pred = model(images)
+        results.append(ce(pred, labels))
+    return sum(results) / len(results)

@@ -26,13 +26,11 @@ def predict_dl(model, data):
     y_true = []
     for i, (images, labels) in enumerate(data):
         images = images.cuda()
-        # labels = labels.cuda()
         x = model(images)
         value, pred = torch.max(x, 1)
         pred = pred.data.cpu()
         for j, dupa in enumerate(images):
             if pred[j] != labels[j]:
-            # if torch.sum(pred[j] == labels[j]) != 1:
                 save_wrong((i+j), images[j], pred[j], labels[j])
         y_pred.extend(list(pred.numpy()))
         y_true.extend(list(labels.numpy()))
