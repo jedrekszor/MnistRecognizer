@@ -6,7 +6,10 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
-from config import BATCH_SIZE, EPOCHS
+import numpy as np
+import pandas as pd
+from config import BATCH_SIZE, EPOCHS, PATH
+from sklearn.metrics import confusion_matrix
 
 T = torchvision.transforms.Compose([
     torchvision.transforms.ToTensor()
@@ -55,7 +58,7 @@ def validate(model, data):
     total = 0
     correct = 0
     for i, (images, labels) in enumerate(data):
-        images = images.cuda()
+        # images = images.cuda()
         x = model(images)
         value, pred = torch.max(x, 1)
         pred = pred.data.cpu()
@@ -64,33 +67,83 @@ def validate(model, data):
     return correct * 100 / total
 
 
+def mse(model, data):
+    results = []
+    for i, (images, labels) in enumerate(data):
+        # images = images.cuda()
+        value, pred = torch.max(model(images), 1)
+        pred = pred.data.cpu()
+        results.append(torch.sum(pred - labels) ** 2)
+    return sum(results) / len(results)
+
+def cel(model, data, ce):
+    results = []
+    for i, (images, labels) in enumerate(data):
+        # images = images.cuda()
+        # value, pred = torch.max(model(images), 1)
+        pred = model(images)
+        results.append(ce(pred, labels))
+        # pred = pred.data.cpu()
+        # results.append(torch.sum(pred - labels) ** 2)
+    return sum(results) / len(results)
+
 def train(epochs, device, learning_rate=1e-3):
     best_model = None
     accuracies = []
+    training_losses = []
+    validation_losses = []
     cnn = create_model().to(device)
     ce = nn.CrossEntropyLoss()
     optimizer = optim.Adam(cnn.parameters(), lr=learning_rate)
     max_accuracy = 0
 
     for epoch in range(epochs):
+        losses = []
         for i, (images, labels) in enumerate(train_loader):
             images = images.to(device)
             labels = labels.to(device)
             optimizer.zero_grad()
             pred = cnn(images)
             loss = ce(pred, labels)
+            losses.append(loss)
             loss.backward()
             optimizer.step()
         accuracy = float(validate(cnn, validation_loader))
+        training_loss = float(sum(losses)/len(losses))
+        validation_loss = float(cel(cnn, validation_loader, ce))
         accuracies.append(accuracy)
+        training_losses.append(training_loss)
+        validation_losses.append(validation_loss)
         if accuracy > max_accuracy:
             best_model = copy.deepcopy(cnn)
             max_accuracy = accuracy
             print("Saving best model with accuracy: ", accuracy)
-        print("Epoch: ", epoch + 1, " Accuracy: ", accuracy, "%")
-    plt.plot(accuracies)
+            torch.save(best_model.state_dict(), PATH)
+        print("Epoch: ", epoch + 1, ", Accuracy: ", accuracy, "%", ", Trainig error: ", training_loss, ", Validation "
+                                                                                                       "error: ",
+              validation_loss)
+        plt.plot(training_losses, label='training')
+        plt.plot(validation_losses, label='validation')
+        plt.legend()
+        plt.show()
     return best_model
+
+
+def predict_dl(model, data):
+    y_pred = []
+    y_true = []
+    for i, (images, labels) in enumerate(data):
+        # images = images.cuda()
+        x = model(images)
+        value, pred = torch.max(x, 1)
+        pred = pred.data.cpu()
+        y_pred.extend(list(pred.numpy()))
+        y_true.extend(list(labels.numpy()))
+    return np.array(y_pred), np.array(y_true)
 
 
 lenet = train(EPOCHS, device)
 print("Training finished")
+
+y_pred, y_true = predict_dl(lenet, validation_loader)
+pd.DataFrame(confusion_matrix(y_true, y_pred, labels=np.arange(0, 10)))
