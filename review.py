@@ -4,7 +4,7 @@ import torchvision.transforms.functional as TF
 import numpy as np
 import pandas as pd
 from config import BATCH_SIZE, PATH, MODELPATH
-from resources import create_model, T
+from resources import create_model, create_squeezenet, T
 from sklearn.metrics import confusion_matrix
 
 train_data = torchvision.datasets.MNIST('mnist_data', train=True, download=True, transform=T)
@@ -36,6 +36,18 @@ def predict_dl(model, data):
         y_true.extend(list(labels.numpy()))
     return np.array(y_pred), np.array(y_true)
 
+def predict_dl_training(model, data):
+    y_pred = []
+    y_true = []
+    for i, (images, labels) in enumerate(data):
+        images = images.cuda()
+        x = model(images)
+        value, pred = torch.max(x, 1)
+        pred = pred.data.cpu()
+        y_pred.extend(list(pred.numpy()))
+        y_true.extend(list(labels.numpy()))
+    return np.array(y_pred), np.array(y_true)
+
 
 def save_wrong(id, image, pred, true):
     image = np.squeeze(image)
@@ -45,9 +57,15 @@ def save_wrong(id, image, pred, true):
         id, pred, true))
 
 
-lenet = create_model().to(device)
+lenet = create_squeezenet().to(device)
 lenet.load_state_dict(torch.load(MODELPATH))
 
 y_pred, y_true = predict_dl(lenet, validation_loader)  # Confusion
 matrix = pd.DataFrame(confusion_matrix(y_true, y_pred, labels=np.arange(0, 10)))  # Matrix
+matrix.to_csv(MODELPATH + "_1.csv")
+print(matrix)
+
+y_pred, y_true = predict_dl_training(lenet, train_loader)  # Confusion
+matrix = pd.DataFrame(confusion_matrix(y_true, y_pred, labels=np.arange(0, 10)))  # Matrix
+matrix.to_csv(MODELPATH + "_2.csv")
 print(matrix)

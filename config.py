@@ -1,5 +1,5 @@
 BATCH_SIZE = 64
-EPOCHS = 40
-MARK = "test"
+EPOCHS = 20
+MARK = "ex4"
 PATH = "D:/Models/"+MARK
 MODELPATH = PATH + "/" + MARK
