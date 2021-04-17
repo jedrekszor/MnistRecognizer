@@ -1,10 +1,11 @@
 import torch, torchvision
 from torch.utils.data import DataLoader
 import torchvision.transforms.functional as TF
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from config import BATCH_SIZE, PATH, MODELPATH
-from resources import create_model, create_squeezenet, T
+from resources import create_model, T
 from sklearn.metrics import confusion_matrix
 
 train_data = torchvision.datasets.MNIST('mnist_data', train=True, download=True, transform=T)
@@ -50,14 +51,12 @@ def predict_dl_training(model, data):
 
 
 def save_wrong(id, image, pred, true):
-    image = np.squeeze(image)
-    image = image * 255.
     img = TF.to_pil_image(image)
     img.save(PATH + "/wrong/" + "{}_pred_{}_actual_{}.png".format(
         id, pred, true))
 
 
-lenet = create_squeezenet().to(device)
+lenet = create_model().to(device)
 lenet.load_state_dict(torch.load(MODELPATH))
 
 y_pred, y_true = predict_dl(lenet, validation_loader)  # Confusion

@@ -1,5 +1,5 @@
 BATCH_SIZE = 64
 EPOCHS = 20
-MARK = "ex4"
+MARK = "ex2v2"
 PATH = "D:/Models/"+MARK
 MODELPATH = PATH + "/" + MARK

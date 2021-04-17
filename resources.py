@@ -5,12 +5,22 @@ import torchvision.models as models
 
 
 T = torchvision.transforms.Compose([
-    torchvision.transforms.Resize(224),
+    # torchvision.transforms.Resize(224),
     torchvision.transforms.ToTensor(),
-    torchvision.transforms.Lambda(lambda x: x.expand(3, -1, -1))
+    # torchvision.transforms.Lambda(lambda x: x.expand(3, -1, -1))
 ])
 
-def create_squeezenet():
+def create_model():
+    return create_model2()
+
+def create_squeezenet1():
+    model = models.squeezenet1_1(pretrained=False)
+
+    model.classifier[1].out_channels = 10
+
+    return model
+
+def create_squeezenet2():
     model = models.squeezenet1_1(pretrained=True)
 
     model.classifier[1].out_channels = 10
@@ -20,25 +30,44 @@ def create_squeezenet():
 
     return model
 
-def create_model():
+def create_model1():
     return nn.Sequential(
         nn.Conv2d(1, 6, 5, padding=2),
         nn.ReLU(),
-        nn.AvgPool2d(2, stride=2),
+        nn.MaxPool2d(2, stride=2),
 
         nn.Conv2d(6, 16, 5, padding=0),
         nn.ReLU(),
-        nn.AvgPool2d(2, stride=2),
+        nn.MaxPool2d(2, stride=2),
 
         nn.Flatten(),
-        nn.Linear(400, 256),
+        nn.Linear(400, 120),
         nn.ReLU(),
-        nn.Linear(256, 128),
+        nn.Linear(120, 84),
         nn.ReLU(),
-        nn.Linear(128, 64),
+        nn.Linear(84, 10)
+
+    )
+
+def create_model2():
+    return nn.Sequential(
+        nn.Conv2d(1, 4, 5, padding=2),
         nn.ReLU(),
-        nn.Linear(64, 10),
-        nn.Softmax(dim=1)
+        nn.AvgPool2d(2, stride=2),
+
+        nn.Conv2d(4, 8, 5, padding=2),
+        nn.ReLU(),
+        nn.AvgPool2d(2, stride=2),
+
+        nn.Conv2d(8, 16, 3, padding=0),
+        nn.ReLU(),
+
+        nn.Flatten(),
+        nn.Linear(400, 120),
+        nn.ReLU(),
+        nn.Linear(120, 84),
+        nn.ReLU(),
+        nn.Linear(84, 10)
     )
 
 
