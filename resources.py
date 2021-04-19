@@ -5,13 +5,13 @@ import torchvision.models as models
 
 
 T = torchvision.transforms.Compose([
-    # torchvision.transforms.Resize(224),
+    torchvision.transforms.Resize(224),
     torchvision.transforms.ToTensor(),
-    # torchvision.transforms.Lambda(lambda x: x.expand(3, -1, -1))
+    torchvision.transforms.Lambda(lambda x: x.expand(3, -1, -1))
 ])
 
 def create_model():
-    return create_model2()
+    return create_squeezenet2()
 
 def create_squeezenet1():
     model = models.squeezenet1_1(pretrained=False)
